@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}心灵晴雨 · 班级心理关怀站{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="topbar"></div>
+  <nav class="navbar">
+    <div class="navbar-inner">
+      <a class="brand" href="{{ url_for('main.index') }}">
+        <span class="mark">🌤</span><span class="brand-text">心灵晴雨</span>
+      </a>
+      <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-hidden="true">
+      <label for="nav-toggle" class="nav-burger" aria-label="打开菜单">
+        <span></span><span></span><span></span>
+      </label>
+      <div class="nav-links">
+        <a href="{{ url_for('main.index') }}" class="{{ 'active' if active == 'home' }}">首页</a>
+        <a href="{{ url_for('knowledge.knowledge_list') }}" class="{{ 'active' if active == 'knowledge' }}">知识科普</a>
+        <a href="{{ url_for('records.record') }}" class="{{ 'active' if active == 'record' }}">情绪打卡</a>
+        <a href="{{ url_for('records.history') }}" class="{{ 'active' if active == 'history' }}">我的记录</a>
+        <a href="{{ url_for('main.dashboard') }}" class="{{ 'active' if active == 'dashboard' }}">数据中心</a>
+        <a href="{{ url_for('main.monthly') }}" class="{{ 'active' if active == 'monthly' }}">月度报告</a>
+      </div>
+      <div class="nav-user">
+        <span class="who">匿名使用 · 无需登录</span>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="flash {{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="footer">
+    心灵晴雨 · 用大数据守护每一份心情 —— 关爱自己，从记录开始
+  </footer>
+
+  {% block chartlib %}{% endblock %}
+  {% block scripts %}{% endblock %}
+</body>
+</html>

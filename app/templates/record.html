@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}情绪打卡 · 心灵晴雨{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>情绪打卡</h1>
+  <p class="sub">每天花 30 秒，记录此刻的心情、压力与睡眠。数据只属于你自己，坚持记录，你会更懂自己。</p>
+</div>
+
+<div class="card" style="max-width: 640px; margin: 0 auto;">
+  {% if today_record %}
+    <p class="hint">你今天已经打过卡了，修改后提交会更新今天的记录。</p>
+  {% endif %}
+  <form method="post">
+    <div class="form-group">
+      <label>日期</label>
+      <input type="date" name="date" value="{{ today_record.date if today_record else today }}" max="{{ today }}">
+    </div>
+
+    <div class="form-group">
+      <label>今天的心情怎么样？</label>
+      <div class="mood-picker">
+        {% set emojis = ['😞', '😟', '😐', '🙂', '😄'] %}
+        {% for i in range(1, 6) %}
+          <label>
+            <input type="radio" name="mood" value="{{ i }}" {% if today_record and today_record.mood == i %}checked{% endif %}>
+            <span class="emoji">{{ emojis[i-1] }}</span>
+            <span class="lbl">{{ mood_labels[i-1] }}</span>
+          </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>压力指数（1-10，越大压力越大）</label>
+      <input type="range" name="stress" id="stress" min="1" max="10" step="1"
+             value="{{ today_record.stress if today_record else 5 }}" oninput="document.getElementById('stressVal').textContent = this.value">
+      <div class="hint">当前：<strong id="stressVal">{{ today_record.stress if today_record else 5 }}</strong> 分</div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>睡眠时长（小时）</label>
+        <input type="number" name="sleep" step="0.1" min="0" max="24" required
+               value="{{ today_record.sleep if today_record else 7.5 }}">
+      </div>
+      <div class="form-group">
+        <label>精力状态</label>
+        <select name="energy" required>
+          {% for i in range(1, 6) %}
+            <option value="{{ i }}" {% if today_record and today_record.energy == i %}selected{% endif %}>{{ i }} 分（{{ ['很疲惫','有点累','一般','较充沛','精力满满'][i-1] }}）</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>想对自己说的话（可选）</label>
+      <textarea name="note" rows="3" placeholder="今天发生了什么？有什么想记下来的？">{{ today_record.note if today_record else '' }}</textarea>
+    </div>
+
+    <button class="btn btn-primary btn-block" type="submit">保存记录</button>
+  </form>
+</div>
+{% endblock %}

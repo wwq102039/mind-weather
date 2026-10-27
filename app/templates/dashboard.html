@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block title %}数据中心 · 心灵晴雨{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>数据中心</h1>
+  <p class="sub">全班情绪与压力的整体趋势（数据已匿名汇总，只看整体、不针对个人）</p>
+</div>
+
+<div class="grid grid-4">
+  <div class="stat">
+    <div class="stat-icon" style="background:#e8f0ff;">👥</div>
+    <div><div class="num">{{ stats.visitor_count }}</div><div class="label">参与人数</div></div>
+  </div>
+  <div class="stat">
+    <div class="stat-icon" style="background:#e6faf4;">✅</div>
+    <div><div class="num">{{ stats.today_count }}</div><div class="label">今日打卡人数</div></div>
+  </div>
+  <div class="stat">
+    <div class="stat-icon" style="background:#f3eeff;">📅</div>
+    <div><div class="num">{{ stats.week_count }}</div><div class="label">本周打卡人次</div></div>
+  </div>
+  <div class="stat">
+    <div class="stat-icon" style="background:#fff3e0;">📈</div>
+    <div><div class="num">{{ stats.total_count }}</div><div class="label">累计记录数</div></div>
+  </div>
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <h2>全班情绪分布</h2>
+    <div id="moodChart" class="chart"></div>
+  </div>
+  <div class="card">
+    <h2>近 30 天情绪 / 压力趋势</h2>
+    <div id="trendChart" class="chart"></div>
+  </div>
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <h2>近 30 天平均睡眠时长</h2>
+    <div id="sleepChart" class="chart"></div>
+  </div>
+  <div class="card">
+    <h2>我的近 14 天情绪</h2>
+    <p class="hint">按当前浏览器匿名保存，换设备或清除缓存会重新开始</p>
+    {% if latest %}
+      <p class="hint">最近一次记录：{{ latest.date }} · 情绪 {{ latest.mood }} 分 · 压力 {{ latest.stress }} 分 · 睡眠 {{ latest.sleep }} 小时</p>
+      <div id="myChart" class="chart-sm"></div>
+    {% else %}
+      <div class="empty">
+        <div class="big">🌱</div>
+        <p>还没有记录，<a href="{{ url_for('records.record') }}">去打卡</a>开始你的第一条心情吧</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block chartlib %}
+<script src="{{ url_for('static', filename='js/echarts.min.js') }}"></script>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  var moodLabels = {{ mood_labels | tojson }};
+  var moodDist = {{ mood_dist | tojson }};
+  var dayLabels = {{ day_labels | tojson }};
+  var moodTrend = {{ mood_trend | tojson }};
+  var stressTrend = {{ stress_trend | tojson }};
+  var sleepTrend = {{ sleep_trend | tojson }};
+
+  var moodColors = ['#ff6b6b', '#ffa94d', '#ffd43b', '#69db7c', '#2ec4b6'];
+
+  var moodChart = echarts.init(document.getElementById('moodChart'));
+  moodChart.setOption({
+    tooltip: { trigger: 'item', formatter: '{b}: {c} 条（{d}%）' },
+    legend: { bottom: 0 },
+    color: moodColors,
+    series: [{
+      type: 'pie',
+      radius: ['40%', '68%'],
+      center: ['50%', '45%'],
+      label: { show: true, formatter: '{b}\n{d}%' },
+      data: moodLabels.map(function (name, i) { return { name: name, value: moodDist[i] }; })
+    }]
+  });
+
+  var trendChart = echarts.init(document.getElementById('trendChart'));
+  trendChart.setOption({
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['情绪指数', '压力指数'], top: 0 },
+    grid: { left: 42, right: 42, top: 36, bottom: 28 },
+    xAxis: { type: 'category', data: dayLabels, boundaryGap: false },
+    yAxis: [
+      { type: 'value', name: '情绪', min: 1, max: 5, interval: 1 },
+      { type: 'value', name: '压力', min: 1, max: 10, interval: 2 }
+    ],
+    series: [
+      { name: '情绪指数', type: 'line', smooth: true, connectNulls: true, data: moodTrend,
+        itemStyle: { color: '#0969da' }, areaStyle: { opacity: 0.08 } },
+      { name: '压力指数', type: 'line', smooth: true, connectNulls: true, yAxisIndex: 1, data: stressTrend,
+        itemStyle: { color: '#ff6b6b' } }
+    ]
+  });
+
+  var sleepChart = echarts.init(document.getElementById('sleepChart'));
+  sleepChart.setOption({
+    tooltip: { trigger: 'axis', valueFormatter: function (v) { return v + ' 小时'; } },
+    grid: { left: 42, right: 20, top: 28, bottom: 28 },
+    xAxis: { type: 'category', data: dayLabels },
+    yAxis: { type: 'value', name: '小时' },
+    series: [{ type: 'bar', data: sleepTrend, itemStyle: { color: '#0969da', borderRadius: [4, 4, 0, 0] }, barMaxWidth: 18 }]
+  });
+
+  {% if latest %}
+  var myLabels = {{ my_labels | tojson }};
+  var myMood = {{ my_mood | tojson }};
+  var myChart = echarts.init(document.getElementById('myChart'));
+  myChart.setOption({
+    tooltip: { trigger: 'axis' },
+    grid: { left: 32, right: 16, top: 20, bottom: 26 },
+    xAxis: { type: 'category', data: myLabels, boundaryGap: false },
+    yAxis: { type: 'value', min: 1, max: 5, interval: 1 },
+    series: [{ type: 'line', smooth: true, connectNulls: true, data: myMood,
+      itemStyle: { color: '#2ec4b6' }, areaStyle: { opacity: 0.1 } }]
+  });
+  {% endif %}
+
+  window.addEventListener('resize', function () {
+    moodChart.resize(); trendChart.resize(); sleepChart.resize();
+    {% if latest %} myChart.resize(); {% endif %}
+  });
+</script>
+{% endblock %}

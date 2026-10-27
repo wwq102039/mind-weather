@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}{{ article.title }} · 心灵晴雨{% endblock %}
+{% block content %}
+<div class="card">
+  <a class="btn btn-ghost btn-sm" href="{{ url_for('knowledge.knowledge_list') }}" style="margin-bottom: 14px;">← 返回科普库</a>
+  <span class="cat">{{ article.category }}</span>
+  <h1 style="font-size: 26px; margin: 10px 0 6px;">{{ article.title }}</h1>
+  <div class="article-meta">发布于 {{ article.created_at.strftime('%Y-%m-%d') }}</div>
+  <div class="tags" style="margin-bottom: 16px;">
+    {% for t in article.tags.split(',') %}
+      {% if t %}<span class="tag">{{ t.strip() }}</span>{% endif %}
+    {% endfor %}
+  </div>
+  <div class="article-body">
+    {{ article.content | md }}
+  </div>
+</div>
+
+{% if related %}
+<div class="page-head"><h1 style="font-size: 20px;">相关阅读</h1></div>
+<div class="grid grid-3">
+  {% for a in related %}
+    <div class="article-card">
+      <span class="cat">{{ a.category }}</span>
+      <h3><a href="{{ url_for('knowledge.knowledge_detail', article_id=a.id) }}">{{ a.title }}</a></h3>
+      <p class="summary">{{ a.summary }}</p>
+    </div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

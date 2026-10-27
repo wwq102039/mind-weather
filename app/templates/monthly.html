@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}月度报告 · 心灵晴雨{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>班级月度心理晴雨报告</h1>
+  <p class="sub">{{ summary.month_label }} · 结合大数据专业特色，用图表回顾全班这个月的情绪与压力状况</p>
+</div>
+
+<div class="grid grid-4">
+  <div class="stat">
+    <div class="stat-icon" style="background:#e8f0ff;">📊</div>
+    <div><div class="num">{{ summary.total }}</div><div class="label">本月记录总数</div></div>
+  </div>
+  <div class="stat">
+    <div class="stat-icon" style="background:#e6faf4;">👥</div>
+    <div><div class="num">{{ summary.participants }}</div><div class="label">参与人数</div></div>
+  </div>
+  <div class="stat">
+    <div class="stat-icon" style="background:#f3eeff;">😊</div>
+    <div><div class="num">{{ summary.avg_mood }}</div><div class="label">平均情绪(满分5)</div></div>
+  </div>
+  <div class="stat">
+    <div class="stat-icon" style="background:#fdeeee;">⚡</div>
+    <div><div class="num">{{ summary.avg_stress }}</div><div class="label">平均压力(满分10)</div></div>
+  </div>
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <h2>本月每日打卡人数</h2>
+    <div id="dailyChart" class="chart"></div>
+  </div>
+  <div class="card">
+    <h2>本月情绪分布</h2>
+    <div id="moodChart" class="chart"></div>
+  </div>
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <h2>关键指标</h2>
+    <p>本月平均睡眠时长：<strong>{{ summary.avg_sleep }}</strong> 小时</p>
+    <p>本月平均情绪：<strong>{{ summary.avg_mood }}</strong> / 5</p>
+    <p>本月平均压力：<strong>{{ summary.avg_stress }}</strong> / 10</p>
+  </div>
+  <div class="card">
+    <h2>温馨提示</h2>
+    {% if high_stress_count > 0 %}
+      <p>本月有 <strong>{{ high_stress_count }}</strong> 位成员平均压力偏高（≥7 分）。如果你最近也感到压力很大，可以看看
+        <a href="{{ url_for('knowledge.knowledge_list', category='压力应对') }}">压力应对</a> 的文章，或找信任的人聊一聊。</p>
+    {% else %}
+      <p>本月大家的整体压力处于较平稳的状态，继续保持良好的作息与记录习惯。</p>
+    {% endif %}
+    <p class="hint">报告数据均匿名汇总，不会展示任何个人的具体信息。</p>
+  </div>
+</div>
+{% endblock %}
+
+{% block chartlib %}
+<script src="{{ url_for('static', filename='js/echarts.min.js') }}"></script>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  var dayLabels = {{ day_labels | tojson }};
+  var dailyCount = {{ daily_count | tojson }};
+  var moodLabels = {{ mood_labels | tojson }};
+  var moodDist = {{ mood_dist | tojson }};
+  var moodColors = ['#ff6b6b', '#ffa94d', '#ffd43b', '#69db7c', '#2ec4b6'];
+
+  var dailyChart = echarts.init(document.getElementById('dailyChart'));
+  dailyChart.setOption({
+    tooltip: { trigger: 'axis' },
+    grid: { left: 40, right: 20, top: 28, bottom: 28 },
+    xAxis: { type: 'category', data: dayLabels },
+    yAxis: { type: 'value', name: '人数', minInterval: 1 },
+    series: [{ type: 'bar', data: dailyCount, itemStyle: { color: '#0969da', borderRadius: [4, 4, 0, 0] }, barMaxWidth: 16 }]
+  });
+
+  var moodChart = echarts.init(document.getElementById('moodChart'));
+  moodChart.setOption({
+    tooltip: { trigger: 'item', formatter: '{b}: {c} 条（{d}%）' },
+    legend: { bottom: 0 },
+    color: moodColors,
+    series: [{
+      type: 'pie',
+      radius: ['40%', '68%'],
+      center: ['50%', '45%'],
+      label: { show: true, formatter: '{b}\n{d}%' },
+      data: moodLabels.map(function (name, i) { return { name: name, value: moodDist[i] }; })
+    }]
+  });
+
+  window.addEventListener('resize', function () { dailyChart.resize(); moodChart.resize(); });
+</script>
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}心灵晴雨 · 班级心理关怀站{% endblock %}
+{% block content %}
+<div class="hero">
+  <h1>把心情记下来，让数据帮你看见自己</h1>
+  <p>
+    这是一个属于我们班级的心理关怀小站。每天花 30 秒记录心情与压力，用大数据可视化
+    的方式看清自己的情绪轨迹；同时在这里学习情绪管理、压力应对的实用方法。记录，是照顾自己的第一步。
+  </p>
+  <div class="actions">
+    <a class="btn btn-primary" href="{{ url_for('records.record') }}">去打卡</a>
+    <a class="btn btn-ghost" href="{{ url_for('main.dashboard') }}">查看数据中心</a>
+  </div>
+</div>
+
+<div class="features">
+  <div class="feature">
+    <span class="fi">📝</span>
+    <div><h3>每日打卡</h3><p>30 秒记录心情、压力与睡眠，无需登录，打开即用</p></div>
+  </div>
+  <div class="feature">
+    <span class="fi">📊</span>
+    <div><h3>大数据可视化</h3><p>结合专业特色，用图表看清全班与自己的情绪趋势</p></div>
+  </div>
+  <div class="feature">
+    <span class="fi">🧠</span>
+    <div><h3>专业科普</h3><p>情绪管理、压力应对的可落地方法，科学又实用</p></div>
+  </div>
+</div>
+
+<div class="page-head">
+  <h1>本月精选 · 心理科普</h1>
+  <p class="sub">结合大数据专业特色，用科学的方法认识情绪、管理压力</p>
+</div>
+
+<div class="grid grid-3">
+  {% for a in featured %}
+    <div class="article-card">
+      <span class="cat">{{ a.category }}</span>
+      <h3><a href="{{ url_for('knowledge.knowledge_detail', article_id=a.id) }}">{{ a.title }}</a></h3>
+      <p class="summary">{{ a.summary }}</p>
+      <div class="tags">{{ a.tags }}</div>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

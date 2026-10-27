@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}我的记录 · 心灵晴雨{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>我的记录</h1>
+  <p class="sub">回看自己的情绪轨迹，觉察规律，也是一种自我关怀。（数据按当前浏览器匿名保存）</p>
+</div>
+
+{% if records %}
+<div class="grid grid-4">
+  <div class="stat">
+    <div class="stat-icon" style="background:#e8f0ff;">🗓️</div>
+    <div><div class="num">{{ stats.total }}</div><div class="label">累计打卡</div></div>
+  </div>
+  <div class="stat">
+    <div class="stat-icon" style="background:#e6faf4;">😊</div>
+    <div><div class="num">{{ stats.avg_mood }}</div><div class="label">平均情绪</div></div>
+  </div>
+  <div class="stat">
+    <div class="stat-icon" style="background:#fdeeee;">⚡</div>
+    <div><div class="num">{{ stats.avg_stress }}</div><div class="label">平均压力</div></div>
+  </div>
+  <div class="stat">
+    <div class="stat-icon" style="background:#f3eeff;">😴</div>
+    <div><div class="num">{{ stats.avg_sleep }}</div><div class="label">平均睡眠(时)</div></div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>近 30 天情绪 / 压力变化</h2>
+  <div id="historyChart" class="chart"></div>
+</div>
+
+<div class="card">
+  <h2>历史记录</h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>日期</th><th>情绪</th><th>压力</th><th>睡眠</th><th>精力</th><th>备注</th></tr>
+      </thead>
+      <tbody>
+        {% for r in records %}
+          <tr>
+            <td>{{ r.date }}</td>
+            <td>{{ mood_labels[r.mood - 1] }}</td>
+            <td>{{ r.stress }} 分</td>
+            <td>{{ r.sleep }} 小时</td>
+            <td>{{ r.energy }} 分</td>
+            <td class="hint">{{ r.note if r.note else '—' }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="card empty">
+  <div class="big">🌱</div>
+  <p>还没有记录，<a href="{{ url_for('records.record') }}">去打卡</a>开始你的第一条心情吧</p>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block chartlib %}
+{% if records %}
+<script src="{{ url_for('static', filename='js/echarts.min.js') }}"></script>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if records %}
+<script>
+  var labels = {{ labels | tojson }};
+  var moodSeries = {{ mood_series | tojson }};
+  var stressSeries = {{ stress_series | tojson }};
+
+  var chart = echarts.init(document.getElementById('historyChart'));
+  chart.setOption({
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['情绪', '压力'], top: 0 },
+    grid: { left: 42, right: 42, top: 36, bottom: 28 },
+    xAxis: { type: 'category', data: labels, boundaryGap: false },
+    yAxis: [
+      { type: 'value', name: '情绪', min: 1, max: 5, interval: 1 },
+      { type: 'value', name: '压力', min: 1, max: 10, interval: 2 }
+    ],
+    series: [
+      { name: '情绪', type: 'line', smooth: true, data: moodSeries, itemStyle: { color: '#0969da' }, areaStyle: { opacity: 0.10 } },
+      { name: '压力', type: 'line', smooth: true, yAxisIndex: 1, data: stressSeries, itemStyle: { color: '#ff6b6b' } }
+    ]
+  });
+  window.addEventListener('resize', function () { chart.resize(); });
+</script>
+{% endif %}
+{% endblock %}

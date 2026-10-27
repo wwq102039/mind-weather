@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}知识科普 · 心灵晴雨{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>知识科普库</h1>
+  <p class="sub">情绪管理 · 压力应对 · 睡眠健康 —— 每篇都来自心理学与行为科学，可落地、可实践</p>
+</div>
+
+<div class="card">
+  <form method="get" style="display: flex; gap: 10px; margin-bottom: 14px;">
+    <input type="text" name="q" value="{{ keyword }}" placeholder="搜索文章标题、标签或内容…"
+           style="flex:1; padding:10px 12px; border:1px solid var(--border); border-radius:10px; font-size:15px;">
+    <button class="btn btn-primary" type="submit">搜索</button>
+    {% if keyword %}<a class="btn btn-ghost" href="{{ url_for('knowledge.knowledge_list') }}">清除</a>{% endif %}
+  </form>
+
+  <div class="tabs">
+    <a href="{{ url_for('knowledge.knowledge_list') }}" class="{{ 'active' if not current_category }}">全部</a>
+    {% for c in categories %}
+      <a href="{{ url_for('knowledge.knowledge_list', category=c) }}" class="{{ 'active' if current_category == c }}">
+        {{ c }}{% if counts.get(c) %} ({{ counts[c] }}){% endif %}
+      </a>
+    {% endfor %}
+  </div>
+</div>
+
+{% if articles %}
+<div class="grid grid-3">
+  {% for a in articles %}
+    <div class="article-card">
+      <span class="cat">{{ a.category }}</span>
+      <h3><a href="{{ url_for('knowledge.knowledge_detail', article_id=a.id) }}">{{ a.title }}</a></h3>
+      <p class="summary">{{ a.summary }}</p>
+      <div class="tags">{{ a.tags }}</div>
+    </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card empty">
+  <div class="big">🔍</div>
+  <p>没有找到相关文章，换个关键词试试吧</p>
+</div>
+{% endif %}
+{% endblock %}
